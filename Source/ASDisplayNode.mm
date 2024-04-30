@@ -255,9 +255,16 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
 }
 
 #if !AS_INITIALIZE_FRAMEWORK_MANUALLY
-__attribute__((constructor)) static void ASLoadFrameworkInitializer(void)
+__attribute__((constructor)) static void ASLoadFrameworkInitializerOnConstructor(void)
 {
-  ASInitializeFrameworkMainThread();
+  ASInitializeFrameworkMainThreadOnConstructor();
+}
+#endif
+
+#if !AS_INITIALIZE_FRAMEWORK_MANUALLY
+__attribute__((destructor)) static void ASLoadFrameworkInitializerOnDestructor(void)
+{
+  ASInitializeFrameworkMainThreadOnDestructor();
 }
 #endif
 
@@ -1621,6 +1628,21 @@ void recursivelyTriggerDisplayForLayer(CALayer *layer, BOOL shouldBlock)
           [self _setClipCornerLayersVisible:newMaskedCorners];
         }
       }
+    }
+  });
+}
+
+- (void)updateSemanticContentAttributeWithAttribute:(UISemanticContentAttribute)attribute
+{
+  __instanceLock__.lock();
+  UISemanticContentAttribute oldAttribute = _semanticContentAttribute;
+  _semanticContentAttribute = attribute;
+  __instanceLock__.unlock();
+
+  ASPerformBlockOnMainThread(^{
+    // If the value has changed we should attempt to relayout.
+    if (attribute != oldAttribute) {
+      [self setNeedsLayout];
     }
   });
 }

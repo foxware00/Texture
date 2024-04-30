@@ -116,7 +116,8 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
     self.selectionStyle = node.selectionStyle; 
     self.focusStyle = node.focusStyle;
     self.accessoryType = node.accessoryType;
-    
+    self.isAccessibilityElement = node.isAccessibilityElement;
+    self.accessibilityElementsHidden = node.accessibilityElementsHidden;
     // the following ensures that we clip the entire cell to it's bounds if node.clipsToBounds is set (the default)
     // This is actually a workaround for a bug we are seeing in some rare cases (selected background view
     // overlaps other cells if size of ASCellNode has changed.)
@@ -1305,6 +1306,11 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
   }
   _deceleratingVelocity = CGPointZero;
 
+  for (_ASTableViewCell *tableViewCell in _cellsForVisibilityUpdates) {
+    [[tableViewCell node] cellNodeVisibilityEvent:ASCellNodeVisibilityEventDidStopScrolling
+                                          inScrollView:scrollView
+                                         withCellFrame:tableViewCell.frame];
+  }
   if (_asyncDelegateFlags.scrollViewDidEndDecelerating) {
       [_asyncDelegate scrollViewDidEndDecelerating:scrollView];
   }
@@ -1485,7 +1491,7 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
 
 - (void)_beginBatchFetchingIfNeededWithContentOffset:(CGPoint)contentOffset velocity:(CGPoint)velocity
 {
-  if (ASDisplayShouldFetchBatchForScrollView(self, self.scrollDirection, ASScrollDirectionVerticalDirections, contentOffset, velocity)) {
+  if (ASDisplayShouldFetchBatchForScrollView(self, self.scrollDirection, ASScrollDirectionVerticalDirections, contentOffset, velocity, NO)) {
     [self _beginBatchFetching];
   }
 }
@@ -1678,6 +1684,9 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
   LOG(@"--- UITableView endUpdates");
   ASPerformBlockWithoutAnimation(!changeSet.animated, ^{
     [super endUpdates];
+    if (numberOfUpdates > 0 && ASActivateExperimentalFeature(ASExperimentalRangeUpdateOnChangesetUpdate)) {
+      [self->_rangeController setNeedsUpdate];
+    }
     [self->_rangeController updateIfNeeded];
     [self _scheduleCheckForBatchFetchingForNumberOfChanges:numberOfUpdates];
   });

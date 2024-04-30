@@ -99,8 +99,8 @@ static inline PINRemoteImageManagerPriority PINRemoteImageManagerPriorityWithASI
       if ([diskCache respondsToSelector:@selector(setByteLimit:)]) {
         // Set a default byteLimit. PINCache recently implemented a 50MB default (PR #201).
         // Ensure that older versions of PINCache also have a byteLimit applied.
-        // NOTE: Using 20MB limit while large cache initialization is being optimized (Issue #144).
-        ((id <ASPINDiskCache>)diskCache).byteLimit = 20 * 1024 * 1024;
+        // NOTE: Matching PINCache defualt 50MB limit.
+        ((id <ASPINDiskCache>)diskCache).byteLimit = 50 * 1024 * 1024;
       }
     }
   });
@@ -212,7 +212,7 @@ static dispatch_once_t shared_init_predicate;
 }
 #endif
 
-- (id <ASImageContainerProtocol>)synchronouslyFetchedCachedImageWithURL:(NSURL *)URL;
+- (id <ASImageContainerProtocol>)synchronouslyFetchedCachedImageWithURL:(NSURL *)URL
 {
   PINRemoteImageManager *manager = [self sharedPINRemoteImageManager];
   PINRemoteImageManagerResult *result = [manager synchronousImageFromCacheWithURL:URL processorKey:nil options:PINRemoteImageManagerDownloadOptionsSkipDecode];
@@ -255,11 +255,13 @@ static dispatch_once_t shared_init_predicate;
 }
 
 - (nullable id)downloadImageWithURL:(NSURL *)URL
+                        shouldRetry:(BOOL)shouldRetry
                       callbackQueue:(dispatch_queue_t)callbackQueue
                    downloadProgress:(ASImageDownloaderProgress)downloadProgress
-                         completion:(ASImageDownloaderCompletion)completion;
+                         completion:(ASImageDownloaderCompletion)completion
 {
   return [self downloadImageWithURL:URL
+                        shouldRetry:shouldRetry
                            priority:ASImageDownloaderPriorityImminent // maps to default priority
                       callbackQueue:callbackQueue
                    downloadProgress:downloadProgress
@@ -267,6 +269,7 @@ static dispatch_once_t shared_init_predicate;
 }
 
 - (nullable id)downloadImageWithURL:(NSURL *)URL
+                        shouldRetry:(BOOL)shouldRetry
                            priority:(ASImageDownloaderPriority)priority
                       callbackQueue:(dispatch_queue_t)callbackQueue
                    downloadProgress:(ASImageDownloaderProgress)downloadProgress
@@ -301,8 +304,13 @@ static dispatch_once_t shared_init_predicate;
   // extra downloads isn't worth the effort of rechecking caches every single time. In order to provide
   // feedback to the consumer about whether images are cached, we can't simply make the cache a no-op and
   // check the cache as part of this download.
+  PINRemoteImageManagerDownloadOptions options = PINRemoteImageManagerDownloadOptionsSkipDecode | PINRemoteImageManagerDownloadOptionsIgnoreCache;
+  if (!shouldRetry) {
+    options |= PINRemoteImageManagerDownloadOptionsSkipRetry;
+  }
+
   return [[self sharedPINRemoteImageManager] downloadImageWithURL:URL
-                                                          options:PINRemoteImageManagerDownloadOptionsSkipDecode | PINRemoteImageManagerDownloadOptionsIgnoreCache
+                                                          options:options
                                                          priority:pi_priority
                                                     progressImage:nil
                                                  progressDownload:progressDownload

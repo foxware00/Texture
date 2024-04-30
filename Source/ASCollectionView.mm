@@ -1655,7 +1655,10 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
   _deceleratingVelocity = CGPointZero;
-    
+  for (_ASCollectionViewCell *cell in _cellsForVisibilityUpdates) {
+    [cell cellNodeVisibilityEvent:ASCellNodeVisibilityEventDidStopScrolling inScrollView:scrollView];
+  }
+
   if (_asyncDelegateFlags.scrollViewDidEndDecelerating) {
     [_asyncDelegate scrollViewDidEndDecelerating:scrollView];
   }
@@ -1857,7 +1860,13 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 
 - (void)_beginBatchFetchingIfNeededWithContentOffset:(CGPoint)contentOffset velocity:(CGPoint)velocity
 {
-  if (ASDisplayShouldFetchBatchForScrollView(self, self.scrollDirection, self.scrollableDirections, contentOffset, velocity)) {
+  // Since we are accessing self.collectionViewLayout, we should make sure we are on main
+  ASDisplayNodeAssertMainThread();
+  BOOL flipsHorizontallyInOppositeLayoutDirection = NO;
+  if (AS_AVAILABLE_IOS(11.0)) {
+    flipsHorizontallyInOppositeLayoutDirection = self.collectionViewLayout.flipsHorizontallyInOppositeLayoutDirection;
+  }
+  if (ASDisplayShouldFetchBatchForScrollView(self, self.scrollDirection, self.scrollableDirections, contentOffset, velocity, flipsHorizontallyInOppositeLayoutDirection)) {
     [self _beginBatchFetching];
   }
 }
@@ -2311,6 +2320,9 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
       
       // Flush any range changes that happened as part of submitting the update.
       as_activity_scope(changeSet.rootActivity);
+      if (numberOfUpdates > 0 && ASActivateExperimentalFeature(ASExperimentalRangeUpdateOnChangesetUpdate)) {
+        [self->_rangeController setNeedsUpdate];
+      }
       [self->_rangeController updateIfNeeded];
     }
   });
