@@ -37,11 +37,11 @@ function build_example {
     if [ -f "${example}/Podfile" ]; then
         echo "Using CocoaPods"
         pod install --project-directory=$example
-        
+
         workspace=$(ls -d ${example}/*.xcworkspace)
         filename=$(basename -- "$workspace")
         scheme="${filename%.*}"
-        
+
         set -o pipefail && xcodebuild \
             -workspace "${workspace}" \
             -scheme "$scheme" \
@@ -67,6 +67,9 @@ function build_example {
             build
 
         cd ../..
+     else
+        echo "Seems like there are no Cartfile or Podfile in the ${example}"
+        echo "Build will be skipped."
     fi
 }
 
@@ -107,6 +110,20 @@ tests_listkit)
         -sdk "$SDK" \
         -destination "$PLATFORM" \
         build-for-testing test
+    success="1"
+    ;;
+
+build_listkit_xcode_spm_integration)
+    echo "Regenerate SPM layout"
+    swift scripts/generate_spm_sources_layout.swift
+    echo "Building AsyncDisplayKit+IGListKit via Xcode's Swift Package Manager"
+    echo "Xcode 14.3.1+ required"
+    set -o pipefail && xcodebuild clean \
+        -project examples/ASIGListKitSPM/Sample.xcodeproj \
+        -scheme Sample \
+        -sdk "iphonesimulator" \
+        -destination "platform=iOS Simulator,name=iPhone 14" \
+        build
     success="1"
     ;;
 
@@ -262,8 +279,19 @@ cocoapods-lint-other-subspecs)
 
 carthage|all)
     echo "Verifying carthage works."
+    ## carthage workaround to slip spm based project
+    spm_example_project="examples/ASIGListKitSPM/Sample.xcodeproj"
+    carthge_example_project_workaround="examples/ASIGListKitSPM/Sample.carthageSkip"
 
-    set -o pipefail && carthage update --no-use-binaries --no-build && carthage build --no-skip-current --use-xcframeworks
+    # apply workaround
+    mv $spm_example_project $carthge_example_project_workaround
+
+    # carthage job
+    set -o pipefail && carthage update && carthage build --no-skip-current
+
+    #revert back workaround
+    mv $carthge_example_project_workaround $spm_example_project
+
     success="1"
     ;;
 
