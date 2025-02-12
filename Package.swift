@@ -23,6 +23,9 @@ let sharedDefines: [CSetting] = [
     
                                 // PINRemoteImage always available for Texture
                                 .define("AS_PIN_REMOTE_IMAGE", to: "1"),
+
+                                // We're using video
+                                .define("AS_USE_VIDEO", to: "1"),
                                 
                                 // always disabled
                                 .define("IG_LIST_COLLECTION_VIEW", to: "0"),]
