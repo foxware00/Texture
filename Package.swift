@@ -40,7 +40,7 @@ let package = Package(
     name: "Texture",
     platforms: [
              .macOS(.v12),
-             .iOS(.v11),
+             .iOS(.v14),
              .tvOS(.v11)
          ],
     products: [
