@@ -18,7 +18,7 @@
 #endif
 
 #ifndef AS_ENABLE_TEXTNODE
-  #define AS_ENABLE_TEXTNODE 1 // Enable old TextNode by default
+  #define AS_ENABLE_TEXTNODE 0 // Enable old TextNode by default
 #endif
 
 // This needs to stay in sync with Weaver
