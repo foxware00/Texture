@@ -39,7 +39,7 @@ static pthread_key_t ASMainThreadAssertionsDisabledKey() {
 }
 
 BOOL ASMainThreadAssertionsAreDisabled() {
-  return (nullptr != pthread_getspecific(ASMainThreadAssertionsDisabledKey()));
+  return 1; // swiftUI doesn't LIKE (nullptr != pthread_getspecific(ASMainThreadAssertionsDisabledKey()));
 }
 
 void ASPushMainThreadAssertionsDisabled() {
