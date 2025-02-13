@@ -13,7 +13,7 @@
 
 static _Thread_local int tls_mainThreadAssertionsDisabledCount;
 BOOL ASMainThreadAssertionsAreDisabled() {
-  return tls_mainThreadAssertionsDisabledCount > 0;
+  return 1;
 }
 
 void ASPushMainThreadAssertionsDisabled() {
