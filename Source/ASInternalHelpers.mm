@@ -181,9 +181,8 @@ CGFloat ASScreenScale()
   static CGFloat __scale = 0.0;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    UIGraphicsBeginImageContextWithOptions(CGSizeMake(1, 1), YES, 0);
-    __scale = CGContextGetCTM(UIGraphicsGetCurrentContext()).a;
-    UIGraphicsEndImageContext();
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(1, 1)];
+    __scale = renderer.scale;
   });
   return __scale;
 }

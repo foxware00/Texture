@@ -37,7 +37,7 @@ UIImage *ASGraphicsCreateImage(ASPrimitiveTraitCollection traitCollection, CGSiz
     return nil;
   }
   
-  if (ASActivateExperimentalFeature(ASExperimentalDrawingGlobal)) {
+  // if (ASActivateExperimentalFeature(ASExperimentalDrawingGlobal)) {
     // If they used default scale, reuse one of two preferred formats.
     static UIGraphicsImageRendererFormat *defaultFormat;
     static UIGraphicsImageRendererFormat *opaqueFormat;
@@ -93,17 +93,17 @@ UIImage *ASGraphicsCreateImage(ASPrimitiveTraitCollection traitCollection, CGSiz
       NSCAssert(NO, @"Error drawing: %@", error);
     }
     return image;
-  }
+  // }
 
-  // Bad OS or experiment flag. Use UIGraphics* API.
-  UIGraphicsBeginImageContextWithOptions(size, opaque, scale);
-  ASPerformBlockWithTraitCollection(work, traitCollection)
-  UIImage *image = nil;
-  if (isCancelled == nil || !isCancelled()) {
-    image = UIGraphicsGetImageFromCurrentImageContext();
-  }
-  UIGraphicsEndImageContext();
-  return image;
+  // // Bad OS or experiment flag. Use UIGraphics* API.
+  // UIGraphicsBeginImageContextWithOptions(size, opaque, scale);
+  // ASPerformBlockWithTraitCollection(work, traitCollection)
+  // UIImage *image = nil;
+  // if (isCancelled == nil || !isCancelled()) {
+  //   image = UIGraphicsGetImageFromCurrentImageContext();
+  // }
+  // UIGraphicsEndImageContext();
+  // return image;
 }
 
 UIImage *ASGraphicsCreateImageWithTraitCollectionAndOptions(ASPrimitiveTraitCollection traitCollection, CGSize size, BOOL opaque, CGFloat scale, UIImage * sourceImage, void (NS_NOESCAPE ^work)()) {
