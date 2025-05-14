@@ -182,7 +182,7 @@ CGFloat ASScreenScale()
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(1, 1)];
-    __scale = renderer.scale;
+    __scale = renderer.image.scale;
   });
   return __scale;
 }
