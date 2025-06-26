@@ -64,6 +64,8 @@ static NSString * const kRate = @"rate";
   BOOL _shouldAggressivelyRecoverFromStall;
   BOOL _muted;
   
+  BOOL _shouldPauseOnExitVisibleState;
+  
   ASVideoNodePlayerState _playerState;
   
   AVAsset *_asset;
@@ -104,6 +106,7 @@ static NSString * const kRate = @"rate";
   _periodicTimeObserverTimescale = 10000;
   [self addTarget:self action:@selector(tapped) forControlEvents:ASControlNodeEventTouchUpInside];
   _lastPlaybackTime = kCMTimeZero;
+  _shouldPauseOnExitVisibleState = YES;
   
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserver:self selector:@selector(applicationDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -476,11 +479,14 @@ static NSString * const kRate = @"rate";
   ASLockScopeSelf();
   
   if (_shouldBePlaying) {
-    [self pause];
-    if (_player != nil && CMTIME_IS_VALID(_player.currentTime)) {
-      _lastPlaybackTime = _player.currentTime;
+    if (_shouldPauseOnExitVisibleState) {
+      [self pause];
+        if (_player != nil && CMTIME_IS_VALID(_player.currentTime)) {
+        _lastPlaybackTime = _player.currentTime;
+      }
+      _shouldBePlaying = YES;
     }
-    _shouldBePlaying = YES;
+  
   }
 }
 
@@ -854,6 +860,20 @@ static NSString * const kRate = @"rate";
 
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+}
+
+#pragma mark - Pause On Exit Visible State
+
+- (void)setShouldPauseOnExitVisibleState:(BOOL)shouldPauseOnExitVisibleState
+{
+  ASLockScopeSelf();
+  _shouldPauseOnExitVisibleState = shouldPauseOnExitVisibleState;
+}
+
+- (BOOL)shouldPauseOnExitVisibleState
+{
+  ASLockScopeSelf();
+  return _shouldPauseOnExitVisibleState;
 }
 
 @end

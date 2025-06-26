@@ -69,6 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property BOOL shouldAutoplay;
 @property BOOL shouldAutorepeat;
+@property BOOL shouldPauseOnExitVisibleState;
 
 @property BOOL muted;
 @property BOOL shouldAggressivelyRecoverFromStall;
